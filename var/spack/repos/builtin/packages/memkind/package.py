@@ -23,6 +23,7 @@ class Memkind(AutotoolsPackage):
     homepage = "https://github.com/memkind/memkind"
     url      = "https://github.com/memkind/memkind/archive/v1.7.0.tar.gz"
 
+    version('1.9.0', 'c11ef226775db6b5c527af52e497d035')
     version('1.7.0', 'bfbbb9226d40fd12ae1822a8be4c9207')
 
     depends_on('autoconf', type='build')

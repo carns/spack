@@ -17,8 +17,11 @@ class Pmemkv(CMakePackage):
     # pmemkv has no tagged releases as of May 1, 2019
     version('develop', branch='master')
 
-    depends_on('libpmemobj-cpp')
-    depends_on('memkind')
+    # pmemkv needs experimental concurrent hash map in libpmemobj-cpp as of
+    # May 1 2019, not available in a tagged release yet
+    depends_on('libpmemobj-cpp@develop')
+    # pmemkv needs pmem allocator that first appeared in memkind in 1.8.0
+    depends_on('memkind@1.8.0:')
     depends_on('rapidjson')
     depends_on('intel-tbb')
 
