@@ -18,7 +18,9 @@ class DarshanUtil(AutotoolsPackage):
 
     maintainers = ['shanedsnyder', 'carns']
 
-    version('develop', branch='master')
+    version('develop',
+            branch='automake_libtool',
+            git='https://xgitlab.cels.anl.gov/wkliao/darshan.git')
     version('3.2.1', sha256='d63048b7a3d1c4de939875943e3e7a2468a9034fcb68585edbc87f57f622e7f7')
     version('3.2.0', sha256='4035435bdc0fa2a678247fbf8d5a31dfeb3a133baf06577786b1fe8d00a31b7e')
     version('3.1.8', sha256='3ed51c8d5d93b4a8cbb7d53d13052140a9dffe0bc1a3e1ebfc44a36a184b5c82')
@@ -37,10 +39,14 @@ class DarshanUtil(AutotoolsPackage):
     depends_on('libtool',  type='build')
     depends_on('m4',       type='build')
 
-
     patch('retvoid.patch', when='@3.2.0:3.2.1')
 
-    configure_directory = 'darshan-util'
+    @property
+    def configure_directory(self):
+        if self.version == Version('develop'):
+            return '.'
+        else:
+            return 'darshan-util'
 
     def configure_args(self):
         spec = self.spec
@@ -50,5 +56,8 @@ class DarshanUtil(AutotoolsPackage):
         extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
         if '+shared' in spec:
             extra_args.append('--enable-shared')
+
+        if spec.satisfies('@develop'):
+            extra_args.append('--disable-darshan-runtime')
 
         return extra_args
