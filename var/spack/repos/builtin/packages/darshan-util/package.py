@@ -6,7 +6,7 @@
 from spack import *
 
 
-class DarshanUtil(Package):
+class DarshanUtil(AutotoolsPackage):
     """Darshan (util) is collection of tools for parsing and summarizing log
     files produced by Darshan (runtime) instrumentation. This package is
     typically installed on systems (front-end) where you intend to analyze
@@ -32,18 +32,23 @@ class DarshanUtil(Package):
 
     depends_on('zlib')
     depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
+
 
     patch('retvoid.patch', when='@3.2.0:3.2.1')
 
-    def install(self, spec, prefix):
+    configure_directory = 'darshan-util'
 
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
+
+        extra_args.append('CC=%s' % self.compiler.cc)
+        extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
         if '+shared' in spec:
-            options.extend(['--enable-shared'])
+            extra_args.append('--enable-shared')
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        return extra_args
