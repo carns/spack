@@ -7,7 +7,7 @@ from spack import *
 import os
 
 
-class DarshanRuntime(Package):
+class DarshanRuntime(AutotoolsPackage):
     """Darshan (runtime) is a scalable HPC I/O characterization tool
     designed to capture an accurate picture of application I/O behavior,
     including properties such as patterns of access within files, with
@@ -20,7 +20,9 @@ class DarshanRuntime(Package):
 
     maintainers = ['shanedsnyder', 'carns']
 
-    version('develop', branch='master')
+    version('develop',
+            branch='automake_libtool',
+            git='https://xgitlab.cels.anl.gov/wkliao/darshan.git')
     version('3.2.1', sha256='d63048b7a3d1c4de939875943e3e7a2468a9034fcb68585edbc87f57f622e7f7')
     version('3.2.0', sha256='4035435bdc0fa2a678247fbf8d5a31dfeb3a133baf06577786b1fe8d00a31b7e')
     version('3.1.8', sha256='3ed51c8d5d93b4a8cbb7d53d13052140a9dffe0bc1a3e1ebfc44a36a184b5c82')
@@ -31,13 +33,26 @@ class DarshanRuntime(Package):
 
     depends_on('mpi', when='+mpi')
     depends_on('zlib')
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
     variant('slurm', default=False, description='Use Slurm Job ID')
     variant('cobalt', default=False, description='Use Coblat Job Id')
     variant('pbs', default=False, description='Use PBS Job Id')
     variant('mpi', default=True, description='Compile with MPI support')
 
-    def install(self, spec, prefix):
+    @property
+    def configure_directory(self):
+        if self.version == Version('develop'):
+            return '.'
+        else:
+            return 'darshan-runtime'
+
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
 
         job_id = 'NONE'
         if '+slurm' in spec:
@@ -47,22 +62,24 @@ class DarshanRuntime(Package):
         if '+pbs' in spec:
             job_id = 'PBS_JOBID'
 
-        # TODO: BG-Q and other platform configure options
-        options = []
+        extra_args.append('CC=%s' % self.compiler.cc)
         if '+mpi' in spec:
-            options = ['CC=%s' % spec['mpi'].mpicc]
+            extra_args.append('MPICC=%s' % self.spec['mpi'].mpicc)
         else:
-            options = ['--without-mpi']
-        options.extend(['--with-mem-align=8',
-                        '--with-log-path-by-env=DARSHAN_LOG_DIR_PATH',
-                        '--with-jobid-env=%s' % job_id,
-                        '--with-zlib=%s' % spec['zlib'].prefix])
+            extra_args.append('--without-mpi')
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-runtime/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        if '+shared' in spec:
+            extra_args.append('--enable-shared')
+
+        extra_args.append('--with-mem-align=8')
+        extra_args.append('--with-log-path-by-env=DARSHAN_LOG_DIR_PATH')
+        extra_args.append('--with-jobid-env=%s' % job_id)
+        extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
+
+        if spec.satisfies('@develop'):
+            extra_args.append('--disable-darshan-util')
+
+        return extra_args
 
     def setup_run_environment(self, env):
         # default path for log file, could be user or site specific setting
