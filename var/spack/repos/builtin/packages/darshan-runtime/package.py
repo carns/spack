@@ -43,6 +43,8 @@ class DarshanRuntime(AutotoolsPackage):
     variant('pbs', default=False, description='Use PBS Job Id')
     variant('mpi', default=True, description='Compile with MPI support')
 
+    # use configure at top level in newer versions, in darshan-runtime
+    # subdir for older versions
     @property
     def configure_directory(self):
         if self.version == Version('develop'):
@@ -62,12 +64,6 @@ class DarshanRuntime(AutotoolsPackage):
         if '+pbs' in spec:
             job_id = 'PBS_JOBID'
 
-        extra_args.append('CC=%s' % self.compiler.cc)
-        if '+mpi' in spec:
-            extra_args.append('MPICC=%s' % self.spec['mpi'].mpicc)
-        else:
-            extra_args.append('--without-mpi')
-
         if '+shared' in spec:
             extra_args.append('--enable-shared')
 
@@ -76,8 +72,23 @@ class DarshanRuntime(AutotoolsPackage):
         extra_args.append('--with-jobid-env=%s' % job_id)
         extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
 
+        # newer versions have separate CC and MPICC variables, and need to
+        # disable integrated build of darshan-util
         if spec.satisfies('@develop'):
             extra_args.append('--disable-darshan-util')
+            extra_args.append('CC=%s' % self.compiler.cc)
+            if '+mpi' in spec:
+                extra_args.append('MPICC=%s' % self.spec['mpi'].mpicc)
+            else:
+                extra_args.append('--without-mpi')
+        # older versions need MPI compiler in CC if building with MPI
+        # support
+        else:
+            if '+mpi' in spec:
+                extra_args.append('CC=%s' % self.spec['mpi'].mpicc)
+            else:
+                extra_args.append('CC=%s' % self.compiler.cc)
+                extra_args.append('--without-mpi')
 
         return extra_args
 
