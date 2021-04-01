@@ -15,6 +15,7 @@ class Mercury(CMakePackage):
     maintainers = ['soumagne']
 
     version('master', branch='master', submodules=True)
+    version('master-ucx', branch='ucx', submodules=True)
     version('2.0.0', sha256='9e80923712e25df56014309df70660e828dbeabbe5fcc82ee024bcc86e7eb6b7')
     version('1.0.1', sha256='02febd56c401ef7afa250caf28d012b37dee842bfde7ee16fcd2f741b9cf25b3')
     version('1.0.0', sha256='fb0e44d13f4652f53e21040435f91d452bc2b629b6e98dcf5292cd0bece899d4')
@@ -26,6 +27,7 @@ class Mercury(CMakePackage):
     variant('ofi', default=True,  description='Use OFI libfabric plugin')
     # NOTE: the sm plugin does not require any package dependency.
     variant('sm',  default=True,  description='Use shared-memory plugin')
+    variant('ucx', default=False, description='Use UCX plugin')
     # NOTE: if boostsys is False, mercury will install its own copy
     # of the preprocessor headers.
     variant('boostsys', default=True,
@@ -44,6 +46,7 @@ class Mercury(CMakePackage):
 
     depends_on('cmake@2.8.12.2:', type='build')
     # depends_on('cci', when='+cci')  # TODO: add CCI package
+    depends_on('ucx', when='+ucx')
     depends_on('bmi', when='+bmi')
     depends_on('mpi', when='+mpi')
     depends_on('libfabric@1.5:', when='+ofi')
@@ -73,6 +76,7 @@ class Mercury(CMakePackage):
             '-DMERCURY_USE_SYSTEM_MCHECKSUM:BOOL=OFF',
             '-DMERCURY_USE_XDR:BOOL=OFF',
             '-DNA_USE_BMI:BOOL=%s' % variant_bool('+bmi'),
+            '-DNA_USE_UCX:BOOL=%s' % variant_bool('+ucx'),
             '-DNA_USE_CCI:BOOL=%s' % variant_bool('+cci'),
             '-DNA_USE_MPI:BOOL=%s' % variant_bool('+mpi'),
             '-DNA_USE_SM:BOOL=%s'  % variant_bool('+sm'),

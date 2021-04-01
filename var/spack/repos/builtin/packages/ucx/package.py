@@ -18,6 +18,7 @@ class Ucx(AutotoolsPackage, CudaPackage):
 
     # Development
     version('1.9-dev', branch='v1.9.x')
+    version('master', branch='master')
 
     # Current
     version('1.10.0', sha256='b885e24b1b94724c03cb213c355381e98df1e2d1fd7f633cf8055b6dd05db92d', preferred=True)
@@ -91,6 +92,10 @@ class Ucx(AutotoolsPackage, CudaPackage):
     depends_on('knem', when='+knem')
 
     configure_abs_path = 'contrib/configure-release'
+
+    @when('@master')
+    def autoreconf(self, spec, prefix):
+        Executable('./autogen.sh')()
 
     @when('@1.9-dev')
     def autoreconf(self, spec, prefix):
