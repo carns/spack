@@ -6,7 +6,7 @@
 from spack import *
 
 
-class DarshanUtil(Package):
+class DarshanUtil(AutotoolsPackage):
     """Darshan (util) is collection of tools for parsing and summarizing log
     files produced by Darshan (runtime) instrumentation. This package is
     typically installed on systems (front-end) where you intend to analyze
@@ -14,11 +14,11 @@ class DarshanUtil(Package):
 
     homepage = "http://www.mcs.anl.gov/research/projects/darshan/"
     url = "http://ftp.mcs.anl.gov/pub/darshan/releases/darshan-3.1.0.tar.gz"
-    git      = "https://xgitlab.cels.anl.gov/darshan/darshan.git"
+    git      = "https://github.com/darshan-hpc/darshan.git"
 
     maintainers = ['shanedsnyder', 'carns']
 
-    version('master', branch='master', submodules='True')
+    version('main', branch='wkliao/darshan-automake_libtool', submodules='True')
     version('3.3.0',      sha256='2e8bccf28acfa9f9394f2084ec18122c66e45d966087fa2e533928e824fcb57a', preferred=True)
     version('3.3.0-pre2', sha256='0fc09f86f935132b7b05df981b05cdb3796a1ea02c7acd1905323691df65e761')
     version('3.3.0-pre1', sha256='1c655359455b5122921091bab9961491be58a5f0158f073d09fe8cc772bd0812')
@@ -37,6 +37,10 @@ class DarshanUtil(Package):
 
     depends_on('zlib')
     depends_on('bzip2', when="+bzip2", type=("build", "link", "run"))
+    depends_on('autoconf', type='build')
+    depends_on('automake', type='build')
+    depends_on('libtool',  type='build')
+    depends_on('m4',       type='build')
 
     patch('retvoid.patch', when='@3.2.0:3.2.1')
 
@@ -45,20 +49,21 @@ class DarshanUtil(Package):
     conflicts('+apxc', when='@:3.2.1',
               msg='+apxc variant only available starting from version 3.3.0')
 
-    def install(self, spec, prefix):
+    @property
+    def configure_directory(self):
+        return 'darshan-util'
 
-        options = ['CC=%s' % self.compiler.cc,
-                   '--with-zlib=%s' % spec['zlib'].prefix]
+    def configure_args(self):
+        spec = self.spec
+        extra_args = []
+
+        extra_args.append('CC=%s' % self.compiler.cc)
+        extra_args.append('--with-zlib=%s' % spec['zlib'].prefix)
         if '+shared' in spec:
-            options.extend(['--enable-shared'])
-
+            extra_args.append('--enable-shared')
         if '+apmpi' in spec:
-            options.extend(['--enable-autoperf-apmpi'])
+            extra_args.append('--enable-apmpi')
         if '+apxc' in spec:
-            options.extend(['--enable-autoperf-apxc'])
+            extra_args.append('--enable-apxc')
 
-        with working_dir('spack-build', create=True):
-            configure = Executable('../darshan-util/configure')
-            configure('--prefix=%s' % prefix, *options)
-            make()
-            make('install')
+        return extra_args
