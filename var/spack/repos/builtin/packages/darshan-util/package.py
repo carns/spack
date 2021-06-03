@@ -62,8 +62,8 @@ class DarshanUtil(AutotoolsPackage):
         if '+shared' in spec:
             extra_args.append('--enable-shared')
         if '+apmpi' in spec:
-            extra_args.append('--enable-apmpi')
+            extra_args.append('--enable-apmpi-mod')
         if '+apxc' in spec:
-            extra_args.append('--enable-apxc')
+            extra_args.append('--enable-apxc-mod')
 
         return extra_args
