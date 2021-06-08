@@ -81,7 +81,7 @@ class DarshanRuntime(AutotoolsPackage):
         if '+shared' in spec:
             extra_args.append('--enable-shared')
         if '+hdf5' in spec:
-            extra_args.append('--enable-hdf5-mod=%s' % spec['hdf5'].prefix)
+            extra_args.append('--enable-hdf5-mod')
         if '+apmpi' in spec:
             extra_args.append('--enable-apmpi-mod')
         if '+apmpi_sync' in spec:
